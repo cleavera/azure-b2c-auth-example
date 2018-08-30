@@ -1,6 +1,6 @@
 import { B2cConfig } from '../classes/b2c-config';
 import { Token } from '../classes/token';
-import { CLIENT_ID, REDIRECT_URL } from '../constants/azure.local';
+import { CLIENT_ID, REDIRECT_URL } from '../constants/azure.constant';
 import { ActionService } from './action.service';
 import { AzureB2cService } from './azure-b2c.service';
 import { LoggerService } from './logger.service';
