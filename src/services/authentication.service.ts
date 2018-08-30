@@ -1,24 +1,20 @@
 import { B2cConfig } from '../classes/b2c-config';
 import { Token } from '../classes/token';
 import { CLIENT_ID, REDIRECT_URL } from '../constants/azure.local';
-import { StorageKeys } from '../constants/storage-keys.constant';
 import { ActionService } from './action.service';
 import { AzureB2cService } from './azure-b2c.service';
 import { LoggerService } from './logger.service';
 import { MessageService } from './message.service';
-import { StorageService } from './storage.service';
 
 export class AuthenticationService {
     public token: Token;
     public config: B2cConfig;
-    private _storage: StorageService;
     private _messenger: MessageService;
     private _logger: LoggerService;
     private _actionElement: HTMLElement;
     private _actionService: ActionService;
 
-    constructor(storage: StorageService, messenger: MessageService, logger: LoggerService, actionElement: HTMLElement) {
-        this._storage = storage;
+    constructor(messenger: MessageService, logger: LoggerService, actionElement: HTMLElement) {
         this._messenger = messenger;
         this._logger = logger;
         this._actionElement = actionElement;
@@ -28,21 +24,17 @@ export class AuthenticationService {
     public async init(): Promise<void> {
         this.config = await AzureB2cService.getConfig();
 
-        if (this._storage.has(StorageKeys.TOKEN)) {
-            this.token = Token.fromJWT(this._storage.get<string>(StorageKeys.TOKEN) as string);
-        } else {
-            try {
-                this._updateToken(window.location.hash);
-            } catch (e) {
-                this._logger.log(e);
-                this._messenger.set('Unauthenticated');
-                this._actionElement.innerText = 'Authenticate';
-                this._actionService.setAction((): void => {
-                    this.authenticate();
-                });
+        try {
+            this._updateToken(window.location.hash);
+        } catch (e) {
+            this._logger.log(e);
+            this._messenger.set('Unauthenticated');
+            this._actionElement.innerText = 'Authenticate';
+            this._actionService.setAction((): void => {
+                this.authenticate();
+            });
 
-                return;
-            }
+            return;
         }
 
         this._messenger.set('Authenticated');
@@ -80,6 +72,5 @@ export class AuthenticationService {
 
     private _updateToken(hash: string): void {
         this.token = AzureB2cService.parseHash(hash);
-        this._storage.set(StorageKeys.TOKEN, this.token.raw);
     }
 }
